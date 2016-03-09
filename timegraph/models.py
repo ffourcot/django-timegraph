@@ -86,6 +86,9 @@ class Metric(models.Model):
     graph_color = models.CharField(blank=True, max_length=8, verbose_name=('graph color'))
     graph_order = models.IntegerField(default=0, verbose_name=('graph order'))
 
+    rrd_root = getattr(settings, 'TIMEGRAPH_RRD_ROOT', '/var/lib/rrdcached/db')
+    cache_prefix = getattr(settings, 'TIMEGRAPH_CACHE_PREFIX', 'timegraph')
+
     def get_polling(self, obj):
         """
         Retrieves the latest value of the metric the given object.
@@ -142,19 +145,17 @@ class Metric(models.Model):
         """
         RRD path for the given object.
         """
-        rrd_root = getattr(settings, 'TIMEGRAPH_RRD_ROOT', '/var/lib/rrdcached/db')
         obj_type = obj.__class__.__name__.lower()
         obj_pk = str(obj.pk).replace(':', '')
-        return os.path.join(rrd_root, obj_type, obj_pk, '%s.rrd' % self.pk)
+        return os.path.join(self.rrd_root, obj_type, obj_pk, '%s.rrd' % self.pk)
 
     def _cache_key(self, obj):
         """
         Cache key for the given object.
         """
-        cache_prefix = getattr(settings, 'TIMEGRAPH_CACHE_PREFIX', 'timegraph')
         obj_type = obj.__class__.__name__.lower()
         obj_pk = str(obj.pk).replace(':', '')
-        return '%s/%s/%s/%s' % (cache_prefix, obj_type, obj_pk, self.pk)
+        return '%s/%s/%s/%s' % (self.cache_prefix, obj_type, obj_pk, self.pk)
 
     def __unicode__(self):
         return self.name
