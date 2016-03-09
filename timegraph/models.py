@@ -101,7 +101,7 @@ class Metric(models.Model):
         """
         cache.set(self._cache_key(obj), value, 7 * 86400)
         if self.rrd_enabled:
-            filepath = self._rrd_path(obj)
+            filepath = self.rrd_path(obj)
             if not os.path.exists(filepath):
                 heartbeat = getattr(settings, 'TIMEGRAPH_HEARTBEAT', 300)
                 dirpath = os.path.dirname(filepath)
@@ -141,7 +141,7 @@ class Metric(models.Model):
         else:
             return value and unicode(value) or ''
 
-    def _rrd_path(self, obj):
+    def rrd_path(self, obj):
         """
         RRD path for the given object.
         """

@@ -257,7 +257,7 @@ class TestMetric(TestCase):
     def test_rrd_path(self):
         metric = Metric.objects.get(pk=1)
         user = User.objects.get(pk=1)
-        self.assertEquals(metric._rrd_path(user), os.path.join(settings.TIMEGRAPH_RRD_ROOT, 'user', '1', '1.rrd'))
+        self.assertEquals(metric.rrd_path(user), os.path.join(settings.TIMEGRAPH_RRD_ROOT, 'user', '1', '1.rrd'))
 
     def test_unicode(self):
         m = Metric(name='foo bar')
