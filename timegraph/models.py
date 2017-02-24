@@ -176,7 +176,7 @@ class Metric(models.Model):
             obj_pk = str(obj.pk).replace(':', '')
             key = pre_key % obj_pk
             cache_dict[key] = value
-            if self.rrd_enabled:
+            if self.rrd_enabled and value is not None:
                 filepath = os.path.join(pre_path, obj_pk, filename)
                 try:
                     # we could use os.path.exists here, but python calls stat()
