@@ -321,7 +321,7 @@ def format_with_prefix(value, unit):
         for i, prefix in enumerate(prefixes):
             if prefix:
                 prefixes[i] = prefix + 'i'
-    l = value and max(-8, min(math.log(value) / math.log(base), 8)) or 0
+    l = value and max(-8, min(math.log(abs(value)) / math.log(base), 8)) or 0
     if l >= 0:
         l = int(l)
     else:
