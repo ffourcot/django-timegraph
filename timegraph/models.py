@@ -184,7 +184,7 @@ class Metric(models.Model):
                     # Use an exception for such rare cases
                     rrdtool.update(filepath, "N:{}".format(value))
                 except rrdtool.error as err:
-                    if "No such file or directory" not in err.message:
+                    if "No such file" not in err.message:
                         LOGGER.error("error on %s metric: %s", self.parameter,
                                      err)
                         continue
