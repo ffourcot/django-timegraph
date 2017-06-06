@@ -197,11 +197,7 @@ class Metric(models.Model):
                                    'RRA:AVERAGE:0.5:1:600',
                                    'RRA:AVERAGE:0.5:6:600',
                                    'RRA:AVERAGE:0.5:24:600',
-                                   'RRA:AVERAGE:0.5:288:600',
-                                   'RRA:MAX:0.5:1:600',
-                                   'RRA:MAX:0.5:6:600',
-                                   'RRA:MAX:0.5:24:600',
-                                   'RRA:MAX:0.5:288:600')  # Up to 600d
+                                   'RRA:AVERAGE:0.5:288:600')  # Up to 600d
                     # As rrdupdate manpage says, "using the letter 'N', in which
                     # case the update time is set to be the current time
                     rrdtool.update(filepath, "N:{}".format(value))
