@@ -32,6 +32,7 @@
 import math
 import os
 import rrdtool
+import simplejson
 
 from django.conf import settings
 from django.core.cache import cache
@@ -283,6 +284,55 @@ class Metric(models.Model):
             return value in ['1', 'True']
         else:
             return value and unicode(value) or ''
+
+    def xport(self, args, object_list, op="+", un_value="0", json=False):
+
+        key = self.parameter
+        xvars = []
+        for obj in object_list:
+            rrd_path = self._rrd_path(obj)
+            if os.path.exists(rrd_path):
+                xkey = '%s%i' % (key, obj.pk)
+                args += ['DEF:%s=%s:%s:AVERAGE' %
+                         (xkey, rrd_path, self.pk)]
+                xvars += [xkey]
+
+        if not xvars:
+            return None
+
+        # replace the unknown values with un_value,
+        # BTW 'ADDNAN' version of '+' operator does not need that
+        # but other ops do.
+        # HP41 memories...
+        variables = xvars
+        # xvars = [ [var, "UN", un_value, var, "IF"] for var in xvars ]
+        xvars = [
+            [var, "UN", "0.0", var, "IF", "0.0", "EQ", un_value, var, "IF"]
+            for var in xvars]
+        xvars = [item for sublist in xvars for item in sublist]
+
+        xvars += [op for x in variables[1:]]
+        args += ['CDEF:%s=%s' % (key, ','.join(xvars))]
+        args += ['XPORT:{0}:{0}'.format(key)]
+
+        args = map(str, args)
+        output = rrdtool.xport(*args)
+
+        # we cheat , if the last value is 0 we copy the n-1 value in it
+        # and if first value is 0 too we do the same. The goal is to have
+        # a relatively smoothed line to display.
+        if output['data'][-1] == 0.0:
+            output['data'][-1] = output[key][-2]
+
+        if output['data'][0] == 0.0:
+            output['data'][0] = output[key][1]
+
+        # FIXME: replace the 9999 pings values with '' values or something else
+
+        if json:
+            return simplejson.dumps(output)
+        else:
+            return output
 
     def _rrd_path(self, obj):
         """
