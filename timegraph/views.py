@@ -30,8 +30,11 @@
 #
 
 import os
+import subprocess
 import rrdtool
 import tempfile
+import xml.etree.ElementTree as ET
+import simplejson
 
 from django.http import HttpResponse, HttpResponseBadRequest, Http404
 from django.utils.encoding import force_unicode
@@ -140,3 +143,94 @@ def timegraph_rrd(options):
     image_file = tempfile.NamedTemporaryFile()
     rrdtool.graph([str(image_file.name)] + [ force_unicode(x).encode('utf-8') for x in options ])
     return image_file.read()
+
+#
+# Data extraction and reporting routines
+#
+
+def _rrd_export_wrap(args, object_list, exports, op="+", un_value="0",
+                     json=True):
+    """ Export RRD data as JSON for a set of objects and their metrics.
+
+    Where 'args' is a list of additional parameters to be passed to rrdtool
+    like start date, and step..., each item is the name or the value of a
+    parameter, 'object_list' is a list of kiwi objects and 'exports' is a
+    dictionnary of the metrics we want to export with their labels.
+    If there is more than one objects their metric values will be aggregated
+    by the operation defined in 'op', for example '+' will create a vector
+    of the sums of the bandwidth of the lines and MAX will create a vector
+    of the MAX values.
+    un_value replace the unknown values retrieved from the RRDs.
+    Take a look at the rrdtool documentation to learn which RPN operations
+    may be used.
+    """
+    keys = []
+    for key, metric in exports.iteritems():
+        xvars = []
+        for obj in object_list:
+            rrd_path = metric._rrd_path(obj)
+            if os.path.exists(rrd_path):
+                xkey = '%s%i' % (key, obj.pk)
+                args += ['DEF:%s=%s:%s:AVERAGE' %
+                         (xkey, metric._rrd_path(obj), metric.pk)]
+                xvars += [xkey]
+
+        if not xvars:
+            return None
+
+        # replace the unknown values with un_value,
+        # BTW 'ADDNAN' version of '+' operator does not need that
+        # but other ops do.
+        # HP41 memories...
+        variables = xvars
+        # xvars = [ [var, "UN", un_value, var, "IF"] for var in xvars ]
+        xvars = [
+            [var, "UN", "0.0", var, "IF", "0.0", "EQ", un_value, var, "IF"]
+            for var in xvars]
+        xvars = [item for sublist in xvars for item in sublist]
+
+        xvars += [op for x in variables[1:]]
+        args += ['CDEF:%s=%s' % (key, ','.join(xvars))]
+        args += ['XPORT:%s' % key]
+        keys += [key]
+
+    p = subprocess.Popen(['rrdtool', 'xport'] + args, stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE)
+    out, err = p.communicate()
+    if p.poll():
+        raise Exception("rrdtool xport failed %s" % err)
+
+    #  transform the XML data into a dictionnary composed with a
+    # list of 'stamp' dates and some lists of values, each list key
+    # being the label of the metric
+    output = {'stamp': []}
+    for key in keys:
+        output[key] = []
+
+    tree = ET.fromstring(out)
+    for row in tree.findall('data/row'):
+        output['stamp'].append(int(row.find('t').text))
+        values = row.findall('v')
+        for counter, key in enumerate(keys):
+            value = values[counter].text
+            if value in ('NaN', 'nan'):
+                output[key] += [None]
+            else:
+                output[key] += [float(value)]
+
+    # we cheat , if the last value is 0 we copy the n-1 value in it
+    # and if first value is 0 too we do the same. The goal is to have
+    # a relatively smoothed line to display.
+    for key in keys:
+        if output[key][-1] == 0.0:
+            output[key][-1] = output[key][-2]
+
+        if output[key][0] == 0.0:
+            output[key][0] = output[key][1]
+
+        # FIXME: replace the 9999 pings values with '' values or something else
+
+    if json:
+        return simplejson.dumps(output)
+    else:
+        return output
