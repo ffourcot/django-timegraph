@@ -129,6 +129,10 @@ class Metric(models.Model):
 
         .. warning:: All objects must have the same class. Only the class
                      of the first object is read.
+
+        You can use no_return=True to add a little optimisation in performances,
+        since we will not build a big list of result in that cache (for example,
+        if you only want to warn a cache before to use it).
         """
         if len(objs) == 0:
             return
