@@ -189,8 +189,8 @@ class Metric(models.Model):
                     rrdtool.update(filepath, "N:{}".format(value))
                 except rrdtool.error as err:
                     if "No such file" not in err.message:
-                        LOGGER.error("error on %s metric: %s", self.parameter,
-                                     err)
+                        LOGGER.error("error on %s metric (object %s): %s", self.parameter,
+                                     obj_pk, err)
                         continue
 
                     dirpath = os.path.dirname(filepath)
