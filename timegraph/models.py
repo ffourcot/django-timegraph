@@ -352,8 +352,13 @@ def format_value(value, unit):
         return format_with_prefix(value, unit)
 
     if isinstance(value, (int, long)):
-        if unit in units_raw_format or value < 1000:
+        if unit in units_raw_format:
             return '%i %s' % (value, unit)
+        if value < 1000:
+            if unit:
+                return '%i %s' % (value, unit)
+            else:
+                return '%i' % value
 
         return format_with_prefix(value, unit)
 
