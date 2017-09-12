@@ -88,7 +88,7 @@ class Metric(models.Model):
     )
 
     name = models.CharField(max_length=32, verbose_name=('name'))
-    parameter = models.CharField(max_length=256, verbose_name=('parameter'))
+    parameter = models.CharField(max_length=256, verbose_name=('parameter'), db_index=True)
     type = models.CharField(max_length=16, choices=TYPE_CHOICES, default='float')
     unit = models.CharField(max_length=6, blank=True, verbose_name=('unit'))
     rrd_enabled = models.BooleanField(default=True, verbose_name=('RRD enabled'))
