@@ -57,7 +57,7 @@ class Graph(models.Model):
         ('LINE', 'line'),
     )
 
-    slug = models.SlugField()
+    slug = models.SlugField(db_index=True)
     metrics = models.ManyToManyField('Metric')
     title = models.CharField(max_length=255)
     lower_limit = models.IntegerField(blank=True, null=True, default=0)
