@@ -286,7 +286,6 @@ class Metric(models.Model):
             return value and unicode(value) or ''
 
     def xport(self, args, object_list, op="+", un_value="0", json=False):
-
         key = self.parameter
         xvars = []
         for obj in object_list:
@@ -327,12 +326,10 @@ class Metric(models.Model):
         if output['data'][0] == 0.0:
             output['data'][0] = output[key][1]
 
-        # FIXME: replace the 9999 pings values with '' values or something else
-
         if json:
             return simplejson.dumps(output)
-        else:
-            return output
+
+        return output
 
     def _rrd_path(self, obj):
         """

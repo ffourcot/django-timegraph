@@ -146,14 +146,11 @@ def timegraph_rrd(options):
 # Data extraction and reporting routines
 #
 
-def _rrd_export_wrap(args, object_list, exports, op="+", un_value="0",
-                     json=True):
-
+def rrd_export_wrap(args, object_list, exports, op="+", un_value="0", json=True):
     output = {'stamp': []}
     for key, metric in exports.iteritems():
         metric_return = metric.xport(args, object_list, op, un_value)
-        print [metric_return], args
-        output[key] = [ i[0] for i in metric_return['data'][:-1]]
+        output[key] = [i[0] for i in metric_return['data'][:-1]]
 
         if not output['stamp'] and metric_return:
             meta_data = metric_return['meta']
@@ -163,5 +160,4 @@ def _rrd_export_wrap(args, object_list, exports, op="+", un_value="0",
 
     if json:
         return simplejson.dumps(output)
-    else:
-        return output
+    return output
