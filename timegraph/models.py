@@ -33,6 +33,7 @@ import math
 import os
 import rrdtool
 import simplejson
+from copy import copy
 
 from django.conf import settings
 from django.core.cache import cache
@@ -288,6 +289,7 @@ class Metric(models.Model):
     def xport(self, args, object_list, op="+", un_value="0", json=False):
         key = self.parameter
         xvars = []
+        args = copy(args)
         for obj in object_list:
             rrd_path = self._rrd_path(obj)
             if os.path.exists(rrd_path):
