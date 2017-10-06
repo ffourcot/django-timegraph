@@ -150,6 +150,8 @@ def rrd_export_wrap(args, object_list, exports, op="+", un_value="0", json=True)
     output = {'stamp': []}
     for key, metric in exports.iteritems():
         metric_return = metric.xport(args, object_list, op, un_value)
+        if metric_return is None:
+            continue
         output[key] = [i[0] for i in metric_return['data'][:-1]]
 
         if not output['stamp'] and metric_return:
@@ -161,6 +163,9 @@ def rrd_export_wrap(args, object_list, exports, op="+", un_value="0", json=True)
             output['stamp'] = range(meta_data['start'] - meta_data['step'],
                                     meta_data['end'] - meta_data['step'],
                                     meta_data['step'])
+
+    if not output["stamp"]:
+        return None
 
     if json:
         return simplejson.dumps(output)
