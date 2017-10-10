@@ -162,7 +162,7 @@ def rrd_export_wrap(args, object_list, exports, op="+", un_value="0", json=True)
             # invalid values, but less confusing)
             output['stamp'] = range(meta_data['start'] - meta_data['step'],
                                     meta_data['end'] - meta_data['step'],
-                                    meta_data['step'][0:len(output[key])])
+                                    meta_data['step'])[0:len(output[key])]
 
     if not output["stamp"]:
         return None
