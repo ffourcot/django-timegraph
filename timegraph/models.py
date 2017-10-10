@@ -96,6 +96,7 @@ class Metric(models.Model):
     rrd_enabled = models.BooleanField(default=True, verbose_name=('RRD enabled'))
     graph_color = models.CharField(blank=True, max_length=8, verbose_name=('graph color'))
     graph_order = models.IntegerField(default=0, verbose_name=('graph order'))
+    cache_timeout = models.IntegerField(default=0, verbose_name="Timeout")
 
     def __init__(self, *args, **kwargs):
         super(Metric, self).__init__(*args, **kwargs)
@@ -207,7 +208,8 @@ class Metric(models.Model):
                     # As rrdupdate manpage says, "using the letter 'N', in which
                     # case the update time is set to be the current time
                     rrdtool.update(filepath, "N:{}".format(value))
-        cache.set_many(cache_dict, 7 * 86400)
+        timeout = self.cache_timeout if self.cache_timeout else 7 * 86400
+        cache.set_many(cache_dict, timeout=timeout)
 
     def dump_queue(self):
         """Flushes the inner object queue, previously filled with
