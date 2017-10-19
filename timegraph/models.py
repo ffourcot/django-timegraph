@@ -107,6 +107,9 @@ class Metric(models.Model):
         self.heartbeat = getattr(settings, 'TIMEGRAPH_HEARTBEAT', 300)
         self.queue_size = getattr(settings, 'MEMCACHE_QUEUE_SIZE', 3000)
 
+    def natural_key(self):
+        return self.parameter
+
     def get_cached_polling(self, obj):
         """Returns the cached value of the metric for the given object.
         """
