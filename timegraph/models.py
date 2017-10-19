@@ -77,10 +77,16 @@ class Graph(models.Model):
         verbose_name_plural = _('graphs')
 
 
+class MetricManager(models.Manager):
+    def get_by_natural_key(self, parameter):
+        return self.get(parameter=parameter)
+
+
 class Metric(models.Model):
     """
     A model representing a monitored metric.
     """
+    objects = MetricManager()
 
     TYPE_CHOICES = (
         ('bool', 'boolean'),
