@@ -321,6 +321,9 @@ class Metric(models.Model):
         args = map(str, args)
         output = rrdtool.xport(*args)
 
+        if not output['data']:
+            return None
+
         # we cheat , if the last value is 0 we copy the n-1 value in it
         # and if first value is 0 too we do the same. The goal is to have
         # a relatively smoothed line to display.
