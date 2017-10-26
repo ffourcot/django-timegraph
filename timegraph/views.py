@@ -152,7 +152,7 @@ def rrd_export_wrap(args, object_list, exports, op="+", un_value="0", json=True)
         metric_return = metric.xport(args, object_list, op, un_value)
         if metric_return is None:
             continue
-        output[key] = [i[0] for i in metric_return['data'][:-1]]
+        output[key] = [i[0] for i in metric_return['data']]
 
         if not output['stamp'] and metric_return:
             meta_data = metric_return['meta']
