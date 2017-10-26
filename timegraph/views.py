@@ -33,6 +33,7 @@ import os
 import rrdtool
 import simplejson
 import tempfile
+import time
 
 from django.http import HttpResponse, HttpResponseBadRequest, Http404
 from django.utils.encoding import force_unicode
@@ -160,9 +161,13 @@ def rrd_export_wrap(args, object_list, exports, op="+", un_value="0", json=True)
             # for our users, since it sometimes export values in future.
             # To prevent this, we return timestamp at the start of the period (yes, it's
             # invalid values, but less confusing)
-            output['stamp'] = range(meta_data['start'] - meta_data['step'],
-                                    meta_data['end'] - meta_data['step'],
-                                    meta_data['step'])[0:len(output[key])]
+            output['stamp'] = range(meta_data['start'],
+                                    min(meta_data['end'], int(time.time())),
+                                    meta_data['step'])
+
+            output['stamp'] = output['stamp'][0:min(len(output['stamp']), len(output[key]))]
+
+        output[key] = output[key][0:min(len(output['stamp']), len(output[key]))]
 
     if not output["stamp"]:
         return None
