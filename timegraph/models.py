@@ -368,7 +368,6 @@ class Metric(models.Model):
         return self.name
 
     class Meta:
-        ordering = ['name']
         verbose_name = _('metric')
         verbose_name_plural = _('metrics')
 
