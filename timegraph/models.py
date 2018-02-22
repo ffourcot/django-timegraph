@@ -126,7 +126,7 @@ class Metric(models.Model):
         """
         return [self._cache[obj.pk] for obj in objs]
 
-    def get_polling(self, obj):
+    def get_polling(self, obj, **kwargs):
         """
         Retrieves the latest value of the metric for the given object.
         """
@@ -134,9 +134,9 @@ class Metric(models.Model):
             del self._cache[obj.pk]
         except KeyError:
             pass
-        return self.get_polling_many((obj,))[0]
+        return self.get_polling_many((obj,), **kwargs)[0]
 
-    def get_polling_many(self, objs, no_return=False):
+    def get_polling_many(self, objs, no_return=False, force_metric_type=True):
         """ Get many cache objects of the same type in one call.
 
         .. warning:: All objects must have the same class. Only the class
@@ -145,6 +145,10 @@ class Metric(models.Model):
         You can use no_return=True to add a little optimisation in performances,
         since we will not build a big list of result in that cache (for example,
         if you only want to warn a cache before to use it).
+
+        When force_metric_type is set, we convert None values (i.e not in the
+        cache) to 0, 0.0 or False (it depends on the metric type).
+        When it's not set, we return None for not found values.
         """
         if len(objs) == 0:
             return
@@ -163,7 +167,8 @@ class Metric(models.Model):
             # Fill the cache with the massive result
             for key, pk in keys:
                 if key in metrics:
-                    self._cache[pk] = self.to_python(metrics[key])
+                    self._cache[pk] = self.to_python(metrics[key],
+                                                     force_metric_type=force_metric_type)
                 else:
                     self._cache[pk] = None
 
@@ -278,7 +283,7 @@ class Metric(models.Model):
         """
         return (self.type in ['float', 'int']) and (self.unit not in [u'%', u'°', u'°C', u'°F'])
 
-    def to_python(self, value):
+    def to_python(self, value, force_metric_type=True):
         """
         Converts the given string value to a python value.
         """
@@ -286,14 +291,22 @@ class Metric(models.Model):
             try:
                 return float(value)
             except (ValueError, TypeError):
-                return 0.0
+                if force_metric_type:
+                    return 0.0
+                return None
         elif self.type == 'int':
             try:
                 return int(value)
             except (ValueError, TypeError):
-                return 0
+                if force_metric_type:
+                    return 0
+                return None
         elif self.type == 'bool':
-            return value in ['1', 'True']
+            if value in ['1', 'True']:
+                return True
+            elif not force_metric_type and value is None:
+                return None
+            return False
         else:
             return value and unicode(value) or ''
 
