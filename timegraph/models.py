@@ -177,6 +177,9 @@ class Metric(models.Model):
 
         return self.get_cached_polling_list(objs)
 
+    def get_sum_many(self, objs):
+        return sum((x for x in self.get_polling_many(objs) if x is not None))
+
     def set_polling(self, obj, value):
         """Stores the latest value of the metric for the given object.
         """
