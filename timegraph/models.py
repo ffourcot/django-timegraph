@@ -151,7 +151,7 @@ class Metric(models.Model):
         When it's not set, we return None for not found values.
         """
         if len(objs) == 0:
-            return
+            return []
         pre_key = self._pre_key_for(*objs)
 
         # Build a list of all object keys
