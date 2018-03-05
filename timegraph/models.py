@@ -55,7 +55,7 @@ def sum_metric(metric_parameter, objects):
 
     .. warning:: this generate a database request! You have been warned
     """
-    metric = Metric.object.parameter(parameter=metric_parameter)
+    metric = Metric.objects.get(parameter=metric_parameter)
     return metric.get_sum_many(objects)
 
 
@@ -64,7 +64,7 @@ def get_simple_polling(metric_parameter, obj):
 
     .. warning:: this generate a database request! You have been warned
     """
-    metric = Metric.object.parameter(parameter=metric_parameter)
+    metric = Metric.objects.get(parameter=metric_parameter)
     return metric.get_polling(obj)
 
 
