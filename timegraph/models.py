@@ -50,6 +50,24 @@ def objtype(obj):
     return obj.__class__.__name__.lower()
 
 
+def sum_metric(metric_parameter, objects):
+    """ Get sum of polling values.
+
+    .. warning:: this generate a database request! You have been warned
+    """
+    metric = Metric.object.parameter(parameter=metric_parameter)
+    return metric.get_sum_many(objects)
+
+
+def get_simple_polling(metric_parameter, obj):
+    """ Get a single polling value
+
+    .. warning:: this generate a database request! You have been warned
+    """
+    metric = Metric.object.parameter(parameter=metric_parameter)
+    return metric.get_polling(obj)
+
+
 class Graph(models.Model):
     """
     A model representing a graph of a set of monitored metrics.
