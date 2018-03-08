@@ -68,6 +68,25 @@ def get_simple_polling(metric_parameter, obj):
     return metric.get_polling(obj)
 
 
+def enrich_object_with_polling(metric_parameter, obj_list, attr=None):
+    """ Get polling values, and add it as object attribute
+
+    .. warning:: this generate a database request! You have been warned
+
+    :param metric_parameter: parameter used to get Metric database object
+    :type metric_parameter: str
+    :param obj_list: list of objects to enrich
+    :type obj_list: list
+    :param attr: attribute to set (by default, use metric_parameter as attribute)
+    :param attr: str
+    """
+    if attr is None:
+        attr = metric_parameter
+    metric = Metric.objects.get(parameter=metric_parameter)
+    for obj, value in zip(obj_list, metric.get_polling_many(obj_list)):
+        setattr(obj, attr, value)
+
+
 class Graph(models.Model):
     """
     A model representing a graph of a set of monitored metrics.
