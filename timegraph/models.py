@@ -50,25 +50,25 @@ def objtype(obj):
     return obj.__class__.__name__.lower()
 
 
-def sum_metric(metric_parameter, objects):
+def sum_metric(metric_parameter, objects, **kwargs):
     """ Get sum of polling values.
 
     .. warning:: this generate a database request! You have been warned
     """
     metric = Metric.objects.get(parameter=metric_parameter)
-    return metric.get_sum_many(objects)
+    return metric.get_sum_many(objects, **kwargs)
 
 
-def get_simple_polling(metric_parameter, obj):
+def get_simple_polling(metric_parameter, obj, **kwargs):
     """ Get a single polling value
 
     .. warning:: this generate a database request! You have been warned
     """
     metric = Metric.objects.get(parameter=metric_parameter)
-    return metric.get_polling(obj)
+    return metric.get_polling(obj, **kwargs)
 
 
-def enrich_object_with_polling(metric_parameter, obj_list, attr=None):
+def enrich_object_with_polling(metric_parameter, obj_list, attr=None, **kwargs):
     """ Get polling values, and add it as object attribute
 
     .. warning:: this generate a database request! You have been warned
@@ -83,7 +83,7 @@ def enrich_object_with_polling(metric_parameter, obj_list, attr=None):
     if attr is None:
         attr = metric_parameter
     metric = Metric.objects.get(parameter=metric_parameter)
-    for obj, value in zip(obj_list, metric.get_polling_many(obj_list)):
+    for obj, value in zip(obj_list, metric.get_polling_many(obj_list, **kwargs)):
         setattr(obj, attr, value)
 
 
@@ -214,8 +214,8 @@ class Metric(models.Model):
 
         return self.get_cached_polling_list(objs)
 
-    def get_sum_many(self, objs):
-        return sum((x for x in self.get_polling_many(objs) if x is not None))
+    def get_sum_many(self, objs, **kwargs):
+        return sum((x for x in self.get_polling_many(objs, **kwargs) if x is not None))
 
     def set_polling(self, obj, value):
         """Stores the latest value of the metric for the given object.
