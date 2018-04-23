@@ -200,7 +200,7 @@ class Metric(models.Model):
 
         # fetch them from the cache
         if len(keys) > 0:
-            metrics = cache.get_many([key for key, _ in keys])
+            metrics = cache.get_many([key for key, _ in keys], raw=True)
             # Fill the cache with the massive result
             for key, pk in keys:
                 if key in metrics:
@@ -263,11 +263,11 @@ class Metric(models.Model):
                     # case the update time is set to be the current time
                     rrdtool.update(filepath, "N:{}".format(value))
         timeout = self.cache_timeout if self.cache_timeout else 7 * 86400
-        cache.set_many(cache_dict, timeout=timeout)
+        cache.set_many(cache_dict, timeout=timeout, raw=True)
 
     def dump_queue(self):
         """Flushes the inner object queue, previously filled with
-        queue_append(), to memcache.
+        queue_append(), to cache server.
         """
         self.set_polling_many(self.queue)
         self.queue = []
@@ -311,6 +311,8 @@ class Metric(models.Model):
             print "Max size is %s" % (size - 1000)
 
         main()
+
+        TODO: check behaviour with redis
         """
         self.queue.append((obj, value))
         if len(self.queue) > self.queue_size:
