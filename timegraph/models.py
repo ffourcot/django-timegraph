@@ -231,17 +231,26 @@ class Metric(models.Model):
         first_obj = objs_and_values[0][0]
         pre_key = self._pre_key_for(first_obj)
         pre_path = os.path.join(self.rrd_root, objtype(first_obj))
-        filename = '%s.rrd' % self.pk
 
-        if ':' in first_obj:
+        if ':' in str(first_obj.pk):
             objs_and_values = [(str(obj.pk).replace(':', ''), value) for obj, value in objs_and_values]
         else:
-            objs_and_values = [(str(obj.pk), value) for obj, value in objs_and_values]
+            objs_and_values = [(str(obj.id), value) for obj, value in objs_and_values]
 
         for obj_pk, value in objs_and_values:
             key = pre_key % obj_pk
             cache_dict[key] = value
-            if self.rrd_enabled and value not in (None, ''):
+
+        if self.rrd_enabled:
+            self.insert_rrd(objs_and_values, pre_path)
+
+        timeout = self.cache_timeout if self.cache_timeout else 7 * 86400
+        cache.set_many(cache_dict, timeout=timeout, raw=True)
+
+    def insert_rrd(self, objs_and_values, pre_path):
+        filename = '%s.rrd' % self.pk
+        for obj_pk, value in objs_and_values:
+            if value not in (None, ''):
                 filepath = os.path.join(pre_path, obj_pk, filename)
                 try:
                     # we could use os.path.exists here, but python calls stat()
@@ -266,8 +275,6 @@ class Metric(models.Model):
                     # As rrdupdate manpage says, "using the letter 'N', in which
                     # case the update time is set to be the current time
                     rrdtool.update(filepath, "N:{}".format(value))
-        timeout = self.cache_timeout if self.cache_timeout else 7 * 86400
-        cache.set_many(cache_dict, timeout=timeout, raw=True)
 
     def dump_queue(self):
         """Flushes the inner object queue, previously filled with
