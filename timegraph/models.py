@@ -233,8 +233,12 @@ class Metric(models.Model):
         pre_path = os.path.join(self.rrd_root, objtype(first_obj))
         filename = '%s.rrd' % self.pk
 
-        for obj, value in objs_and_values:
-            obj_pk = str(obj.pk).replace(':', '')
+        if ':' in first_obj:
+            objs_and_values = [(str(obj.pk).replace(':', ''), value) for obj, value in objs_and_values]
+        else:
+            objs_and_values = [(str(obj.pk), value) for obj, value in objs_and_values]
+
+        for obj_pk, value in objs_and_values:
             key = pre_key % obj_pk
             cache_dict[key] = value
             if self.rrd_enabled and value not in (None, ''):
