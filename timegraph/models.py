@@ -104,7 +104,7 @@ def count_polling_by_values(metric_parameter, obj_list, none_value=None, **kwarg
 
     counter = Counter(metric.get_polling_many(obj_list, **kwargs))
     if none_value is not None:
-        counter[none_value] = counter[None]
+        counter[none_value] += counter[None]
         del counter[None]
 
     return counter
