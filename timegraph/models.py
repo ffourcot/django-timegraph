@@ -361,7 +361,10 @@ class Metric(models.Model):
                 return None
             return False
         else:
-            return value and unicode(value) or ''
+            try:
+                return value and unicode(value) or ''
+            except UnicodeDecodeError:
+                return ''
 
     def xport(self, args, object_list, op="+", un_value="0", json=False):
         key = self.parameter
