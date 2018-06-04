@@ -29,18 +29,20 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+import logging
 import math
 import os
+from copy import copy
+from collections import Counter
+
 import rrdtool
 import simplejson
-from copy import copy
 
 from django.conf import settings
 from django.core.cache import cache
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
-import logging
 
 LOGGER = logging.getLogger(__name__)
 
@@ -85,6 +87,27 @@ def enrich_object_with_polling(metric_parameter, obj_list, attr=None, **kwargs):
     metric = Metric.objects.get(parameter=metric_parameter)
     for obj, value in zip(obj_list, metric.get_polling_many(obj_list, **kwargs)):
         setattr(obj, attr, value)
+
+
+def count_polling_by_values(metric_parameter, obj_list, none_value=None, **kwargs):
+    """ Return a Counter of polling values
+
+    .. warning:: this generate a database request! You have been warned
+
+    :param metric_parameter: parameter used to get Metric database object
+    :type metric_parameter: str
+    :param obj_list: list of objects to check
+    :type obj_list: list
+    :param none_value: default value when result is None
+    """
+    metric = Metric.objects.get(parameter=metric_parameter)
+
+    counter = Counter(metric.get_polling_many(obj_list, **kwargs))
+    if none_value is not None:
+        counter[none_value] = counter[None]
+        del counter[None]
+
+    return counter
 
 
 class Graph(models.Model):
